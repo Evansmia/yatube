@@ -11,7 +11,7 @@ from django import forms
 from django.core.cache import cache
 
 
-from posts.models import Group, Post
+from posts.models import Group, Post, Follow
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -45,6 +45,7 @@ class PostsPagesTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
+        self.auth_client_not_author = Client()
         self.authorized_client.force_login(self.user)
         self.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -70,6 +71,7 @@ class PostsPagesTests(TestCase):
             description='Описание_2',
             slug='test-slug_2'
         )
+        self.user2 = User.objects.create_user(username='User2')
 
     def test_pages_uses_correct_template(self):
         pages_templates_names = {
@@ -236,4 +238,28 @@ class PostsPagesTests(TestCase):
         self.assertNotEqual(
             response,
             self.authorized_client.get(reverse('posts:index')).content
+        )
+
+    def test_follow(self):
+        follow_count = Follow.objects.count()
+        self.auth_client_not_author.get(
+            reverse('posts:profile_follow',
+                    kwargs={'username': self.user.username})
+        )
+        self.assertEqual(Follow.objects.count(), follow_count + 1)
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.not_author, author=self.author).exists()
+        )
+
+    def test_unfollow(self):
+        follow_count = Follow.objects.count()
+        self.authorized_client.get(
+            reverse('posts:profile_unfollow',
+                    kwargs={'username': self.user.username})
+        )
+        self.assertEqual(Follow.objects.count(), follow_count - 1)
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user, author=self.user2).exists()
         )
