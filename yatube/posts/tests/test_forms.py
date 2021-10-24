@@ -7,6 +7,7 @@ from django.test import TestCase, Client, override_settings
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.core.cache import cache
 
 
 from posts.models import Group, Post, Comment
@@ -118,4 +119,20 @@ class PostsFormsTests(TestCase):
                 author=self.user,
                 post_id=self.post.id
             )
+        )
+
+    def test_cache(self):
+        response = self.authorized_client.get(reverse('posts:index')).content
+        Post.objects.create(
+            author=self.user,
+            text='Тестовый текст'
+        )
+        self.assertEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
+        )
+        cache.clear()
+        self.assertNotEqual(
+            response,
+            self.authorized_client.get(reverse('posts:index')).content
         )
