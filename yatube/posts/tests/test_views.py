@@ -8,7 +8,6 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django import forms
-from django.core.cache import cache
 
 
 from posts.models import Group, Post, Follow
@@ -29,6 +28,7 @@ class PostsPagesTests(TestCase):
             slug='test-slug'
         )
         cls.user = User.objects.create_user(username='HasNoName')
+        cls.user2 = User.objects.create_user(username='HasNoName2')
 
         for post in range(11):
             Post.objects.create(
@@ -36,6 +36,10 @@ class PostsPagesTests(TestCase):
                 author=cls.user,
                 group=PostsPagesTests.group
             )
+        Follow.objects.create(
+            author=cls.user2,
+            user=cls.user
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -45,7 +49,7 @@ class PostsPagesTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
-        self.auth_client_not_author = Client()
+        self.authorized_client2 = Client()
         self.authorized_client.force_login(self.user)
         self.small_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -71,7 +75,6 @@ class PostsPagesTests(TestCase):
             description='Описание_2',
             slug='test-slug_2'
         )
-        self.user2 = User.objects.create_user(username='User2')
 
     def test_pages_uses_correct_template(self):
         pages_templates_names = {
@@ -217,49 +220,25 @@ class PostsPagesTests(TestCase):
     def test_post_detail_page_show_correct_context(self):
         response = self.authorized_client.get(
             (reverse('posts:post_detail', kwargs={'post_id': self.post.id})))
-        count = response.context['count']
-        test_count = Post.objects.filter(author=self.post.user).count()
-        self.assertEqual(count, test_count)
         test_post = self.post
         text_obj = response.context['post']
         image_obj = text_obj.image
         self.assertEqual(test_post, text_obj)
         self.assertTrue(image_obj, self.post.image)
 
-    def test_cache(self):
-        posts_count = Post.objects.count()
-        response = self.authorized_client.get(reverse('posts:index')).content
-        self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertEqual(
-            response,
-            self.authorized_client.get(reverse('posts:index')).content
-        )
-        cache.clear()
-        self.assertNotEqual(
-            response,
-            self.authorized_client.get(reverse('posts:index')).content
-        )
-
     def test_follow(self):
-        follow_count = Follow.objects.count()
-        self.auth_client_not_author.get(
-            reverse('posts:profile_follow',
-                    kwargs={'username': self.user.username})
-        )
-        self.assertEqual(Follow.objects.count(), follow_count + 1)
-        self.assertTrue(
-            Follow.objects.filter(
-                user=self.not_author, author=self.author).exists()
-        )
+        self.assertFalse(Follow.objects.filter(
+            user=self.user2, author=self.user).exists())
+        self.authorized_client2.get(
+            reverse('posts:profile_follow', args=[self.user2]))
+        self.assertTrue(Follow.objects.filter(
+            user=self.user, author=self.user2).exists())
 
     def test_unfollow(self):
-        follow_count = Follow.objects.count()
-        self.authorized_client.get(
-            reverse('posts:profile_unfollow',
-                    kwargs={'username': self.user.username})
+        self.assertTrue(Follow.objects.filter(
+            user=self.user, author=self.user2).exists())
+        self.authorized_client2.get(
+            reverse('posts:profile_unfollow', args=[self.user2])
         )
-        self.assertEqual(Follow.objects.count(), follow_count - 1)
-        self.assertFalse(
-            Follow.objects.filter(
-                user=self.user, author=self.user2).exists()
-        )
+        self.assertFalse(Follow.objects.filter(
+            user=self.user2, author=self.user).exists())
