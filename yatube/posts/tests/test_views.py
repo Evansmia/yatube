@@ -68,7 +68,7 @@ class PostsPagesTests(TestCase):
             image=self.uploaded,
             text='Тестовый текст',
             author=self.user,
-            group=self.group
+            group=PostsPagesTests.group
         )
         self.group_2 = Group.objects.create(
             title='Тестовый заголовок_2',
@@ -207,7 +207,7 @@ class PostsPagesTests(TestCase):
 
     def test_group_list_page_show_correct_context(self):
         response = self.authorized_client.get(
-            (reverse('posts:group_list', kwargs={'slug': 'test_slug'})))
+            (reverse('posts:group_list', kwargs={'slug': self.group.slug})))
         first_object = response.context['page_obj'][0]
         group_title_0 = first_object.group.title
         group_description_0 = first_object.group.description
