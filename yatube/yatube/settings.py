@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'sorl.thumbnail',
 ]
 
+POST_PAGING_COUNT = 10
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
