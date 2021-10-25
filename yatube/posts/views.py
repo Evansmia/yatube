@@ -4,13 +4,14 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from .forms import PostForm, CommentForm
+from django.conf import settings
 
 User = get_user_model()
 
 
 def index(request):
     post_list = Post.objects.all()
-    paginator = Paginator(post_list, 10)
+    paginator = Paginator(post_list, settings.POST_PAGING_COUNT)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(
@@ -23,7 +24,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, settings.POST_PAGING_COUNT)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(
@@ -42,7 +43,7 @@ def profile(request, username):
         and Follow.objects.filter(user=request.user, author=author).exists()
     )
     posts_author = Post.objects.filter(author_id=author.id)
-    paginator = Paginator(posts_author, 10)
+    paginator = Paginator(posts_author, settings.POST_PAGING_COUNT)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     number_of_posts = posts_author.count()
@@ -128,7 +129,7 @@ def follow_index(request):
     posts = Post.objects.filter(
         author__following__user=request.user
     )
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, settings.POST_PAGING_COUNT)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {'page_obj': page_obj}
