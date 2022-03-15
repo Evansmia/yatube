@@ -10,7 +10,7 @@
 
 ### Создайте и активируйте виртуальное окружение
 ```
-python -m venv venv<br>
+python -m venv venv <br>
 source ./venv/Scripts/activate  #для Windows
 source ./venv/bin/activate      #для Linux и macOS
 ```
