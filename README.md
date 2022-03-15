@@ -6,7 +6,8 @@
 <li>Django 2.2.19</li>
 <li>SQLite</li>
 <li>HTML/CSS</li>
-<h2>Запуск проекта в dev-режиме</h2>
+<h2>Установка проекта:</h2>
+
 ### Создайте и активируйте виртуальное окружение
 ```
 python -m venv venv<br>
@@ -16,7 +17,7 @@ source ./venv/bin/activate      #для Linux и macOS
 ### Установите требуемые зависимости
 ```
 pip install -r requirements.txt
-``` 
+```
 ### Примените миграции
 ```
 python manage.py migrate
@@ -25,4 +26,5 @@ python manage.py migrate
 ```
 python manage.py runserver
 ```
+
 ### Приложение будет доступно по адресу: http://127.0.0.1:8000/
