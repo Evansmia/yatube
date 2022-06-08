@@ -8,6 +8,10 @@
 <li>HTML/CSS</li>
 <h2>Установка проекта:</h2>
 
+### Клонируйте репозиторий:
+```git clone https://github.com/Evansmia/yatube.git```
+### Перейдите в папку проекта:
+```cd yatube/```
 ### Создайте и активируйте виртуальное окружение
 ```
 python -m venv venv
